@@ -60,6 +60,10 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define BNO055_RST_Pin GPIO_PIN_13
 #define BNO055_RST_GPIO_Port GPIOC
+#define BUMPER_L_Pin GPIO_PIN_4
+#define BUMPER_L_GPIO_Port GPIOA
+#define BUMPER_R_Pin GPIO_PIN_5
+#define BUMPER_R_GPIO_Port GPIOA
 #define USART3_EN_Pin GPIO_PIN_10
 #define USART3_EN_GPIO_Port GPIOA
 #define UART5_EN_Pin GPIO_PIN_11
