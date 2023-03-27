@@ -119,7 +119,7 @@ int main(void)
   MX_TIM6_Init();
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
-  setup(&huart1, &huart3, &huart5, &hi2c1, &htim1, &htim3, &htim6);
+  setup(&huart1, &huart3, &huart5, &hi2c1, &htim1, &htim3, &htim6, &htim7);
   /* USER CODE END 2 */
 
   /* Infinite loop */

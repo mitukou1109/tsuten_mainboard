@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <functional>
 #include <string>
 #include <unordered_map>
@@ -12,6 +13,7 @@
 
 #include <tsuten_msgs/ResetOdometry.h>
 #include <tsuten_msgs/SensorStates.h>
+#include <tsuten_msgs/TapeLEDCommand.h>
 
 class TsutenMainboard
 {
@@ -23,13 +25,10 @@ public:
       I2C_HandleTypeDef *gyro_i2c_handler,
       TIM_HandleTypeDef *x_odometer_encoder_handler,
       TIM_HandleTypeDef *y_odometer_encoder_handler,
-      TIM_HandleTypeDef *publish_timer_handler);
+      TIM_HandleTypeDef *publish_timer_handler,
+      TIM_HandleTypeDef *tape_led_blink_timer_handler);
 
   void loop();
-
-  void publishOdom();
-
-  void publishSensorStates();
 
   friend void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 
@@ -54,20 +53,39 @@ private:
     MOVABLE_TABLE_1800 = 5
   };
 
+  struct ValvePortSet
+  {
+    uint8_t board_number;
+    uint8_t close_port;
+    uint8_t open_port;
+
+    static const uint8_t NUM_OF_BOARDS = 2;
+  };
+
   static const std::unordered_map<ValveID, std::string> VALVE_NAMES;
+
+  static const std::unordered_map<ValveID, ValvePortSet> VALVE_PORT_SETS;
 
   static const uint16_t BNO055_I2C_ADDRESS;
 
+  void publishOdom();
+
+  void publishSensorStates();
+
+  double getYaw();
+
+  double getAngularVelocity();
+
+  void toggleTapeLED();
+
   void cmdVelCallback(const geometry_msgs::Twist &cmd_vel);
+
+  void tapeLEDCommandCallback(const tsuten_msgs::TapeLEDCommand &tape_led_command);
 
   void valveCommandCallback(const ValveID valve_id, const std_msgs::Bool &valve_command);
 
   void resetOdometryCallback(const tsuten_msgs::ResetOdometryRequest &request,
                              tsuten_msgs::ResetOdometryResponse &response);
-
-  double getYaw();
-
-  double getAngularVelocity();
 
   ros::NodeHandle nh_;
 
@@ -82,14 +100,19 @@ private:
 
   ros::Subscriber<geometry_msgs::Twist, TsutenMainboard> cmd_vel_sub_;
 
+  ros::Subscriber<tsuten_msgs::TapeLEDCommand, TsutenMainboard> tape_led_command_sub_;
+
   std::unordered_map<ValveID, ros::Subscriber<std_msgs::Bool>> valve_command_subs_;
 
   ros::ServiceServer<tsuten_msgs::ResetOdometryRequest, tsuten_msgs::ResetOdometryResponse,
                      TsutenMainboard>
       reset_odometry_service_server_;
 
+  std_msgs::ColorRGBA tape_led_color_;
+
   UART_HandleTypeDef *motor_driver_uart_handler_;
 
+  std::array<uint8_t, ValvePortSet::NUM_OF_BOARDS> valve_controller_port_states_;
   UART_HandleTypeDef *valve_controller_uart_handler_;
 
   uint8_t gyro_data_;
@@ -98,4 +121,5 @@ private:
 
   std::unordered_map<Axis, TIM_HandleTypeDef *> odometer_encoder_handlers_;
   TIM_HandleTypeDef *publish_timer_handler_;
+  TIM_HandleTypeDef *tape_led_blink_timer_handler_;
 };

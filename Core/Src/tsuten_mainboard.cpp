@@ -1,6 +1,5 @@
 #include <tsuten_mainboard.hpp>
 
-#include <array>
 #define _USE_MATH_DEFINES
 #include <cmath>
 
@@ -15,6 +14,15 @@ const std::unordered_map<TsutenMainboard::ValveID, std::string> TsutenMainboard:
      {ValveID::MOVABLE_TABLE_1500, "movable_table_1500_shooter"},
      {ValveID::MOVABLE_TABLE_1800, "movable_table_1800_shooter"}};
 
+const std::unordered_map<TsutenMainboard::ValveID, TsutenMainboard::ValvePortSet>
+    TsutenMainboard::VALVE_PORT_SETS =
+        {{ValveID::DUAL_TABLE_UPPER_L, ValvePortSet{0, 0, 1}},
+         {ValveID::DUAL_TABLE_UPPER_R, ValvePortSet{0, 2, 3}},
+         {ValveID::DUAL_TABLE_LOWER, ValvePortSet{0, 4, 5}},
+         {ValveID::MOVABLE_TABLE_1200, ValvePortSet{0, 6, 7}},
+         {ValveID::MOVABLE_TABLE_1500, ValvePortSet{1, 0, 1}},
+         {ValveID::MOVABLE_TABLE_1800, ValvePortSet{1, 2, 3}}};
+
 const uint16_t TsutenMainboard::BNO055_I2C_ADDRESS = 0x28;
 
 TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
@@ -23,11 +31,13 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
                                  I2C_HandleTypeDef *gyro_i2c_handler,
                                  TIM_HandleTypeDef *x_odometer_encoder_handler,
                                  TIM_HandleTypeDef *y_odometer_encoder_handler,
-                                 TIM_HandleTypeDef *publish_timer_handler)
+                                 TIM_HandleTypeDef *publish_timer_handler,
+                                 TIM_HandleTypeDef *tape_led_blink_timer_handler)
     : odom_pub_("odom", &odom_),
       sensor_states_pub_("sensor_states", &sensor_states_),
       debug_message_pub_("debug_message", &debug_message_),
       cmd_vel_sub_("cmd_vel", &TsutenMainboard::cmdVelCallback, this),
+      tape_led_command_sub_("tape_led_command", &TsutenMainboard::tapeLEDCommandCallback, this),
       reset_odometry_service_server_("reset_odometry",
                                      &TsutenMainboard::resetOdometryCallback, this),
       motor_driver_uart_handler_(motor_driver_uart_handler),
@@ -36,7 +46,8 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
       gyro_i2c_handler_(gyro_i2c_handler),
       odometer_encoder_handlers_({{Axis::X, x_odometer_encoder_handler},
                                   {Axis::Y, y_odometer_encoder_handler}}),
-      publish_timer_handler_(publish_timer_handler)
+      publish_timer_handler_(publish_timer_handler),
+      tape_led_blink_timer_handler_(tape_led_blink_timer_handler)
 {
   for (auto &valve_name_pair : VALVE_NAMES)
   {
@@ -138,6 +149,32 @@ void TsutenMainboard::publishSensorStates()
   sensor_states_pub_.publish(&sensor_states_);
 }
 
+double TsutenMainboard::getYaw()
+{
+  return 0.;
+}
+
+double TsutenMainboard::getAngularVelocity()
+{
+  return 0.;
+}
+
+void TsutenMainboard::toggleTapeLED()
+{
+  if (tape_led_color_.r > 0.5)
+  {
+    HAL_GPIO_TogglePin(TAPE_LED_R_GPIO_Port, TAPE_LED_R_Pin);
+  }
+  if (tape_led_color_.g > 0.5)
+  {
+    HAL_GPIO_TogglePin(TAPE_LED_G_GPIO_Port, TAPE_LED_G_Pin);
+  }
+  if (tape_led_color_.b > 0.5)
+  {
+    HAL_GPIO_TogglePin(TAPE_LED_B_GPIO_Port, TAPE_LED_B_Pin);
+  }
+}
+
 void TsutenMainboard::cmdVelCallback(const geometry_msgs::Twist &cmd_vel)
 {
   static const float WHEEL_RADIUS = 100.0e-3;
@@ -159,6 +196,27 @@ void TsutenMainboard::cmdVelCallback(const geometry_msgs::Twist &cmd_vel)
   debug_message_pub_.publish(&debug_message_);
 }
 
+void TsutenMainboard::tapeLEDCommandCallback(const tsuten_msgs::TapeLEDCommand &tape_led_command)
+{
+  tape_led_color_ = tape_led_command.color;
+
+  if (tape_led_command.blink)
+  {
+    HAL_TIM_Base_Start_IT(tape_led_blink_timer_handler_);
+  }
+  else
+  {
+    HAL_TIM_Base_Stop_IT(tape_led_blink_timer_handler_);
+
+    HAL_GPIO_WritePin(TAPE_LED_R_GPIO_Port, TAPE_LED_R_Pin,
+                      (tape_led_color_.r > 0.5) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(TAPE_LED_G_GPIO_Port, TAPE_LED_G_Pin,
+                      (tape_led_color_.g > 0.5) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(TAPE_LED_B_GPIO_Port, TAPE_LED_B_Pin,
+                      (tape_led_color_.b > 0.5) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+  }
+}
+
 void TsutenMainboard::valveCommandCallback(const ValveID valve_id,
                                            const std_msgs::Bool &valve_command)
 {
@@ -178,14 +236,4 @@ void TsutenMainboard::resetOdometryCallback(const tsuten_msgs::ResetOdometryRequ
 {
   odom_.pose.pose.position.x = 0.;
   odom_.pose.pose.position.y = 0.;
-}
-
-double TsutenMainboard::getYaw()
-{
-  return 0.;
-}
-
-double TsutenMainboard::getAngularVelocity()
-{
-  return 0.;
 }

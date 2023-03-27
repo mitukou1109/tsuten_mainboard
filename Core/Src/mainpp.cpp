@@ -10,7 +10,8 @@ void setup(UART_HandleTypeDef *motor_driver_uart_handler,
            I2C_HandleTypeDef *gyro_i2c_handler,
            TIM_HandleTypeDef *x_odometer_encoder_handler,
            TIM_HandleTypeDef *y_odometer_encoder_handler,
-           TIM_HandleTypeDef *publish_timer_handler)
+           TIM_HandleTypeDef *publish_timer_handler,
+           TIM_HandleTypeDef *tape_led_blink_timer_handler)
 {
   tsuten_mainboard = new TsutenMainboard(motor_driver_uart_handler,
                                          valve_controller_uart_handler,
@@ -18,7 +19,8 @@ void setup(UART_HandleTypeDef *motor_driver_uart_handler,
                                          gyro_i2c_handler,
                                          x_odometer_encoder_handler,
                                          y_odometer_encoder_handler,
-                                         publish_timer_handler);
+                                         publish_timer_handler,
+                                         tape_led_blink_timer_handler);
 }
 
 void loop()
@@ -50,5 +52,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   {
     tsuten_mainboard->publishOdom();
     tsuten_mainboard->publishSensorStates();
+  }
+  else if (htim == tsuten_mainboard->tape_led_blink_timer_handler_)
+  {
+    tsuten_mainboard->toggleTapeLED();
   }
 }
