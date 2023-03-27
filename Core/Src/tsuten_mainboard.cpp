@@ -220,10 +220,18 @@ void TsutenMainboard::tapeLEDCommandCallback(const tsuten_msgs::TapeLEDCommand &
 void TsutenMainboard::valveCommandCallback(const ValveID valve_id,
                                            const std_msgs::Bool &valve_command)
 {
-  uint8_t valve_command_data = (static_cast<uint8_t>(valve_id) << 1) |
-                               static_cast<uint8_t>(valve_command.data);
-  HAL_UART_Transmit_IT(valve_controller_uart_handler_,
-                       &valve_command_data, sizeof(valve_command_data));
+  auto &VALVE_PORT_SET = VALVE_PORT_SETS.at(valve_id);
+  auto &valve_controller_port_state =
+      valve_controller_port_states_.at(VALVE_PORT_SET.board_number);
+
+  valve_controller_port_state &=
+      ~(1 << (valve_command.data ? VALVE_PORT_SET.close_port : VALVE_PORT_SET.open_port));
+  valve_controller_port_state |=
+      1 << (valve_command.data ? VALVE_PORT_SET.open_port : VALVE_PORT_SET.close_port);
+
+  uint8_t valve_command_data[3] = {0x53, VALVE_PORT_SET.board_number, valve_controller_port_state};
+  HAL_UART_Transmit_IT(valve_controller_uart_handler_, valve_command_data,
+                       sizeof(valve_command_data) / sizeof(uint8_t));
 
   static std::string debug_message_string;
   debug_message_string = "Received " + VALVE_NAMES.at(valve_id) + "/command";
