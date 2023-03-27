@@ -61,9 +61,15 @@ void Error_Handler(void);
 #define BNO055_RST_Pin GPIO_PIN_13
 #define BNO055_RST_GPIO_Port GPIOC
 #define BUMPER_L_Pin GPIO_PIN_4
-#define BUMPER_L_GPIO_Port GPIOA
+#define BUMPER_L_GPIO_Port GPIOC
 #define BUMPER_R_Pin GPIO_PIN_5
-#define BUMPER_R_GPIO_Port GPIOA
+#define BUMPER_R_GPIO_Port GPIOC
+#define TAPE_LED_R_Pin GPIO_PIN_0
+#define TAPE_LED_R_GPIO_Port GPIOB
+#define TAPE_LED_G_Pin GPIO_PIN_1
+#define TAPE_LED_G_GPIO_Port GPIOB
+#define TAPE_LED_B_Pin GPIO_PIN_2
+#define TAPE_LED_B_GPIO_Port GPIOB
 #define USART3_EN_Pin GPIO_PIN_10
 #define USART3_EN_GPIO_Port GPIOA
 #define UART5_EN_Pin GPIO_PIN_11
