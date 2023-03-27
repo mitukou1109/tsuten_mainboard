@@ -179,17 +179,23 @@ void TsutenMainboard::cmdVelCallback(const geometry_msgs::Twist &cmd_vel)
 {
   static const float WHEEL_RADIUS = 100.0e-3;
 
-  uint8_t omega_data[16];
   for (uint8_t i = 0; i < 4; i++)
   {
     float theta = M_PI / 4 + i * M_PI / 2;
-    float omega = (-cmd_vel.linear.x * std::sin(theta) + cmd_vel.linear.y * std::cos(theta)) /
-                      WHEEL_RADIUS +
-                  cmd_vel.angular.z;
+    int16_t velocity = std::round(
+        (-cmd_vel.linear.x * std::sin(theta) + cmd_vel.linear.y * std::cos(theta) +
+         cmd_vel.angular.z * WHEEL_RADIUS) *
+        1000. / 2);
 
-    sprintf(reinterpret_cast<char *>(omega_data), "%d:%.3lf", i, omega);
-    HAL_UART_Transmit_IT(motor_driver_uart_handler_,
-                         omega_data, strlen(reinterpret_cast<const char *>(omega_data)));
+    for (int j = 0; j < 4; j++)
+    {
+      uint8_t velocity_data =
+          (i << 5) | (j << 3) |
+          ((j == 3) ? ((velocity < 0) << 2) | ((std::abs(velocity) & (0b11 << 9)) >> 9)
+                    : (std::abs(velocity) & (0b111 << (j * 3))) >> (j * 3));
+
+      HAL_UART_Transmit_IT(motor_driver_uart_handler_, &velocity_data, 1);
+    }
   }
 
   debug_message_.data = "Received cmd_vel";
