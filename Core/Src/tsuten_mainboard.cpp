@@ -177,7 +177,7 @@ void TsutenMainboard::toggleTapeLED()
 
 void TsutenMainboard::cmdVelCallback(const geometry_msgs::Twist &cmd_vel)
 {
-  static const float WHEEL_RADIUS = 100.0e-3;
+  static const float WHEEL_RADIUS = 53.5e-3;
 
   for (uint8_t i = 0; i < 4; i++)
   {
