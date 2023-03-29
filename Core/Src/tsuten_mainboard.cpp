@@ -74,6 +74,7 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
   nh_.advertise(sensor_states_pub_);
   nh_.advertise(debug_message_pub_);
   nh_.subscribe(cmd_vel_sub_);
+  nh_.subscribe(tape_led_command_sub_);
   for (auto &valve_command_sub_pair : valve_command_subs_)
   {
     nh_.subscribe(valve_command_sub_pair.second);
