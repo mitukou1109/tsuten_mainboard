@@ -7,10 +7,10 @@
 
 #include <ros.h>
 #include <geometry_msgs/Twist.h>
-#include <nav_msgs/Odometry.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
 
+#include <tsuten_msgs/Odometry.h>
 #include <tsuten_msgs/ResetOdometry.h>
 #include <tsuten_msgs/SensorStates.h>
 #include <tsuten_msgs/TapeLEDCommand.h>
@@ -89,7 +89,7 @@ private:
 
   ros::NodeHandle nh_;
 
-  nav_msgs::Odometry odom_;
+  tsuten_msgs::Odometry odom_;
   ros::Publisher odom_pub_;
 
   tsuten_msgs::SensorStates sensor_states_;

@@ -33,7 +33,7 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
                                  TIM_HandleTypeDef *y_odometer_encoder_handler,
                                  TIM_HandleTypeDef *publish_timer_handler,
                                  TIM_HandleTypeDef *tape_led_blink_timer_handler)
-    : odom_pub_("odom", &odom_),
+    : odom_pub_("odom_raw", &odom_),
       sensor_states_pub_("sensor_states", &sensor_states_),
       debug_message_pub_("debug_message", &debug_message_),
       cmd_vel_sub_("cmd_vel", &TsutenMainboard::cmdVelCallback, this),
@@ -66,8 +66,6 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
                                             this, valve_id, std::placeholders::_1))));
   }
 
-  odom_.header.frame_id = "odom";
-
   nh_.initNode();
 
   nh_.advertise(odom_pub_);
@@ -81,6 +79,9 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
   }
 
   nh_.advertiseService(reset_odometry_service_server_);
+
+  __HAL_UART_DISABLE_IT(&huart2, UART_IT_PE);
+  __HAL_UART_DISABLE_IT(&huart2, UART_IT_ERR);
 
   HAL_UART_Receive_IT(gyro_uart_handler_, &gyro_data_, 1);
 
@@ -129,13 +130,13 @@ void TsutenMainboard::publishOdom()
   double delta_y =
       odometer_deltas.at(Axis::X) * std::sin(yaw) + odometer_deltas.at(Axis::Y) * std::cos(yaw);
 
-  odom_.header.stamp = nh_.now();
-  odom_.pose.pose.position.x += delta_x;
-  odom_.pose.pose.position.y += delta_y;
-  odom_.pose.pose.orientation = tf::createQuaternionFromYaw(yaw);
-  odom_.twist.twist.linear.x = delta_x / CALCULATION_PERIOD;
-  odom_.twist.twist.linear.y = delta_y / CALCULATION_PERIOD;
-  odom_.twist.twist.angular.z = getAngularVelocity();
+  odom_.stamp = nh_.now();
+  odom_.x += delta_x;
+  odom_.y += delta_y;
+  odom_.theta = yaw;
+  odom_.v_x = delta_x / CALCULATION_PERIOD;
+  odom_.v_y = delta_y / CALCULATION_PERIOD;
+  odom_.v_theta = getAngularVelocity();
 
   odom_pub_.publish(&odom_);
 }
@@ -249,6 +250,6 @@ void TsutenMainboard::valveCommandCallback(const ValveID valve_id,
 void TsutenMainboard::resetOdometryCallback(const tsuten_msgs::ResetOdometryRequest &request,
                                             tsuten_msgs::ResetOdometryResponse &response)
 {
-  odom_.pose.pose.position.x = 0.;
-  odom_.pose.pose.position.y = 0.;
+  odom_.x = 0.;
+  odom_.y = 0.;
 }
