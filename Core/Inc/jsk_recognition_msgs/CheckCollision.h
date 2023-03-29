@@ -4,8 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ros/msg.h"
-#include "sensor_msgs/JointState.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "sensor_msgs/JointState.h"
 
 namespace jsk_recognition_msgs
 {

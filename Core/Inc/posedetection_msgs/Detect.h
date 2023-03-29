@@ -4,9 +4,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ros/msg.h"
-#include "sensor_msgs/Image.h"
 #include "sensor_msgs/CameraInfo.h"
 #include "posedetection_msgs/ObjectDetection.h"
+#include "sensor_msgs/Image.h"
 
 namespace posedetection_msgs
 {
