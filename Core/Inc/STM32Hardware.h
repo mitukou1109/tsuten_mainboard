@@ -61,7 +61,7 @@ protected:
   uint32_t rind;
   inline uint32_t getRdmaInd(void) { return (rbuflen - __HAL_DMA_GET_COUNTER(huart->hdmarx)) & (rbuflen - 1); }
 
-  const static uint16_t tbuflen = 8192;
+  const static uint16_t tbuflen = 16384;
   uint8_t tbuf[tbuflen];
   uint32_t twind, tfind;
 
