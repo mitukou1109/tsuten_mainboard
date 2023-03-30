@@ -69,6 +69,8 @@ private:
 
   void publishSensorStates();
 
+  void publishDebugMessage(std::string debug_message);
+
   double getYaw();
 
   double getAngularVelocity();
