@@ -21,7 +21,6 @@ public:
   TsutenMainboard(
       UART_HandleTypeDef *motor_driver_uart_handler,
       UART_HandleTypeDef *valve_controller_uart_handler,
-      UART_HandleTypeDef *gyro_uart_handler,
       I2C_HandleTypeDef *gyro_i2c_handler,
       TIM_HandleTypeDef *x_odometer_encoder_handler,
       TIM_HandleTypeDef *y_odometer_encoder_handler,
@@ -29,8 +28,6 @@ public:
       TIM_HandleTypeDef *tape_led_blink_timer_handler);
 
   void loop();
-
-  friend void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 
   friend void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c);
 
@@ -66,7 +63,7 @@ private:
 
   static const std::unordered_map<ValveID, ValvePortSet> VALVE_PORT_SETS;
 
-  static const uint16_t BNO055_I2C_ADDRESS;
+  static const uint16_t GYRO_I2C_ADDRESS;
 
   void publishOdom();
 
@@ -116,7 +113,6 @@ private:
   UART_HandleTypeDef *valve_controller_uart_handler_;
 
   uint8_t gyro_data_;
-  UART_HandleTypeDef *gyro_uart_handler_;
   I2C_HandleTypeDef *gyro_i2c_handler_;
 
   std::unordered_map<Axis, TIM_HandleTypeDef *> odometer_encoder_handlers_;

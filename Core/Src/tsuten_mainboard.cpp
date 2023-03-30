@@ -23,11 +23,10 @@ const std::unordered_map<TsutenMainboard::ValveID, TsutenMainboard::ValvePortSet
          {ValveID::MOVABLE_TABLE_1500, ValvePortSet{1, 0, 1}},
          {ValveID::MOVABLE_TABLE_1800, ValvePortSet{1, 2, 3}}};
 
-const uint16_t TsutenMainboard::BNO055_I2C_ADDRESS = 0x28;
+const uint16_t TsutenMainboard::GYRO_I2C_ADDRESS = 0x28;
 
 TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
                                  UART_HandleTypeDef *valve_controller_uart_handler,
-                                 UART_HandleTypeDef *gyro_uart_handler,
                                  I2C_HandleTypeDef *gyro_i2c_handler,
                                  TIM_HandleTypeDef *x_odometer_encoder_handler,
                                  TIM_HandleTypeDef *y_odometer_encoder_handler,
@@ -42,7 +41,6 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
                                      &TsutenMainboard::resetOdometryCallback, this),
       motor_driver_uart_handler_(motor_driver_uart_handler),
       valve_controller_uart_handler_(valve_controller_uart_handler),
-      gyro_uart_handler_(gyro_uart_handler),
       gyro_i2c_handler_(gyro_i2c_handler),
       odometer_encoder_handlers_({{Axis::X, x_odometer_encoder_handler},
                                   {Axis::Y, y_odometer_encoder_handler}}),
@@ -83,9 +81,7 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
   __HAL_UART_DISABLE_IT(&huart2, UART_IT_PE);
   __HAL_UART_DISABLE_IT(&huart2, UART_IT_ERR);
 
-  HAL_UART_Receive_IT(gyro_uart_handler_, &gyro_data_, 1);
-
-  HAL_I2C_Master_Receive_IT(gyro_i2c_handler_, BNO055_I2C_ADDRESS, &gyro_data_, 1);
+  HAL_I2C_Master_Receive_IT(gyro_i2c_handler_, GYRO_I2C_ADDRESS, &gyro_data_, 1);
 
   for (auto &htim_pair : odometer_encoder_handlers_)
   {
