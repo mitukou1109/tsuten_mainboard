@@ -64,6 +64,8 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
                                             this, valve_id, std::placeholders::_1))));
   }
 
+  valve_controller_port_states_.fill(0);
+
   nh_.initNode();
 
   nh_.advertise(odom_pub_);
@@ -212,6 +214,13 @@ void TsutenMainboard::tapeLEDCommandCallback(const tsuten_msgs::TapeLEDCommand &
 
   tape_led_color_ = tape_led_command.color;
 
+  HAL_GPIO_WritePin(TAPE_LED_R_GPIO_Port, TAPE_LED_R_Pin,
+                    (tape_led_color_.r > 0.5) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(TAPE_LED_G_GPIO_Port, TAPE_LED_G_Pin,
+                    (tape_led_color_.g > 0.5) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(TAPE_LED_B_GPIO_Port, TAPE_LED_B_Pin,
+                    (tape_led_color_.b > 0.5) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+
   if (tape_led_command.blink)
   {
     HAL_TIM_Base_Start_IT(tape_led_blink_timer_handler_);
@@ -219,13 +228,6 @@ void TsutenMainboard::tapeLEDCommandCallback(const tsuten_msgs::TapeLEDCommand &
   else
   {
     HAL_TIM_Base_Stop_IT(tape_led_blink_timer_handler_);
-
-    HAL_GPIO_WritePin(TAPE_LED_R_GPIO_Port, TAPE_LED_R_Pin,
-                      (tape_led_color_.r > 0.5) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(TAPE_LED_G_GPIO_Port, TAPE_LED_G_Pin,
-                      (tape_led_color_.g > 0.5) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(TAPE_LED_B_GPIO_Port, TAPE_LED_B_Pin,
-                      (tape_led_color_.b > 0.5) ? GPIO_PIN_SET : GPIO_PIN_RESET);
   }
 }
 
