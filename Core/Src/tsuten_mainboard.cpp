@@ -103,8 +103,7 @@ void TsutenMainboard::publishOdom()
   static const uint16_t ODOMETER_CPR = 2048;
   static const double ODOMETER_WHEEL_DIAMETER = 50.0e-3;
   static const double CALCULATION_PERIOD =
-      static_cast<double>(HAL_RCC_GetPCLK1Freq()) / publish_timer_handler_->Init.Prescaler *
-      publish_timer_handler_->Init.Period;
+      publish_timer_handler_->Init.Prescaler / static_cast<double>(HAL_RCC_GetPCLK1Freq()) * publish_timer_handler_->Init.Period;
 
   std::unordered_map<Axis, int16_t> encoder_counts = {{Axis::X, 0}, {Axis::Y, 0}};
   std::unordered_map<Axis, double> odometer_deltas = {{Axis::X, 0.}, {Axis::Y, 0.}};
@@ -122,17 +121,17 @@ void TsutenMainboard::publishOdom()
   double yaw = getYaw();
 
   double delta_x =
-      odometer_deltas.at(Axis::X) * std::cos(yaw) - odometer_deltas.at(Axis::Y) * std::sin(yaw);
+      -odometer_deltas.at(Axis::X) * std::cos(yaw) + odometer_deltas.at(Axis::Y) * std::sin(yaw);
   double delta_y =
-      odometer_deltas.at(Axis::X) * std::sin(yaw) + odometer_deltas.at(Axis::Y) * std::cos(yaw);
+      -odometer_deltas.at(Axis::X) * std::sin(yaw) - odometer_deltas.at(Axis::Y) * std::cos(yaw);
 
   odom_.stamp = nh_.now();
-  odom_.x += delta_x;
-  odom_.y += delta_y;
-  odom_.theta = yaw;
-  odom_.v_x = delta_x / CALCULATION_PERIOD;
-  odom_.v_y = delta_y / CALCULATION_PERIOD;
-  odom_.v_theta = getAngularVelocity();
+  odom_.x += std::round(delta_x * 1000);
+  odom_.y += std::round(delta_y * 1000);
+  odom_.theta = std::round(yaw * 1000);
+  odom_.v_x = std::round(delta_x / CALCULATION_PERIOD * 1000);
+  odom_.v_y = std::round(delta_y / CALCULATION_PERIOD * 1000);
+  odom_.v_theta = std::round(getAngularVelocity() * 1000);
 
   odom_pub_.publish(&odom_);
 }
@@ -140,9 +139,9 @@ void TsutenMainboard::publishOdom()
 void TsutenMainboard::publishSensorStates()
 {
   sensor_states_.bumper_l =
-      HAL_GPIO_ReadPin(BUMPER_L_GPIO_Port, BUMPER_L_Pin) == GPIO_PIN_SET;
+      HAL_GPIO_ReadPin(BUMPER_L_GPIO_Port, BUMPER_L_Pin) == GPIO_PIN_RESET;
   sensor_states_.bumper_r =
-      HAL_GPIO_ReadPin(BUMPER_R_GPIO_Port, BUMPER_R_Pin) == GPIO_PIN_SET;
+      HAL_GPIO_ReadPin(BUMPER_R_GPIO_Port, BUMPER_R_Pin) == GPIO_PIN_RESET;
 
   sensor_states_pub_.publish(&sensor_states_);
 }
