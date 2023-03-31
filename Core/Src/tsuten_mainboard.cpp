@@ -186,26 +186,31 @@ void TsutenMainboard::cmdVelCallback(const geometry_msgs::Twist &cmd_vel)
 {
   publishDebugMessage("Received cmd_vel");
 
-  static const float WHEEL_RADIUS = 53.5e-3;
+  static const float DIST_FROM_CENTER_TO_WHEEL = 506e-3;
+  static uint8_t velocity_data[4 * 4];
 
   for (uint8_t i = 0; i < 4; i++)
   {
     float theta = M_PI / 4 + i * M_PI / 2;
-    int16_t velocity = std::round(
-                       (-cmd_vel.linear.x * std::sin(theta) + cmd_vel.linear.y * std::cos(theta) +
-                        cmd_vel.angular.z * WHEEL_RADIUS) *
-        1000. / 2);
+    int16_t velocity_2 =
+        std::clamp(
+            static_cast<int>(std::round(
+                (-cmd_vel.linear.x * std::sin(theta) + cmd_vel.linear.y * std::cos(theta) +
+                 cmd_vel.angular.z * DIST_FROM_CENTER_TO_WHEEL) *
+                1000 / 2)),
+            -4000, 4000);
 
     for (int j = 0; j < 4; j++)
     {
-      uint8_t velocity_data =
+      velocity_data[i * 4 + j] =
           (i << 5) | (j << 3) |
-          ((j == 3) ? ((velocity < 0) << 2) | ((std::abs(velocity) & (0b11 << 9)) >> 9)
-                    : (std::abs(velocity) & (0b111 << (j * 3))) >> (j * 3));
-
-      HAL_UART_Transmit_IT(motor_driver_uart_handler_, &velocity_data, 1);
+          ((j == 0) ? ((velocity_2 < 0) << 2) | ((std::abs(velocity_2) & (0b11 << 9)) >> 9)
+                    : (std::abs(velocity_2) & (0b111 << ((3 - j) * 3))) >> ((3 - j) * 3));
     }
   }
+
+  HAL_UART_Transmit_IT(motor_driver_uart_handler_,
+                       velocity_data, sizeof(velocity_data) / sizeof(uint8_t));
 }
 
 void TsutenMainboard::tapeLEDCommandCallback(const tsuten_msgs::TapeLEDCommand &tape_led_command)
