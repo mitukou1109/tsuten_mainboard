@@ -97,9 +97,15 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
 
 void TsutenMainboard::loop()
 {
-  nh_.spinOnce();
+  static constexpr float SPIN_PERIOD = 10e-3;
+  static ros::Time last_spin_time = nh_.now();
 
-  HAL_Delay(10);
+  ros::Time now_time = nh_.now();
+  if ((now_time - last_spin_time).toSec() >= SPIN_PERIOD)
+  {
+    nh_.spinOnce();
+    last_spin_time = now_time;
+  }
 }
 
 void TsutenMainboard::publishOdom()
