@@ -1,7 +1,9 @@
 #include <tsuten_mainboard.hpp>
 
 #define _USE_MATH_DEFINES
+#include <bitset>
 #include <cmath>
+#include <sstream>
 
 #include <main.h>
 #include <tf/tf.h>
@@ -97,7 +99,7 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
 
 void TsutenMainboard::loop()
 {
-  static constexpr float SPIN_PERIOD = 10e-3;
+  static constexpr float SPIN_PERIOD = 50e-3;
   static ros::Time last_spin_time = nh_.now();
 
   ros::Time now_time = nh_.now();
@@ -245,6 +247,8 @@ void TsutenMainboard::tapeLEDCommandCallback(const tsuten_msgs::TapeLEDCommand &
 void TsutenMainboard::valveCommandCallback(const ValveID valve_id,
                                            const std_msgs::Bool &valve_command)
 {
+  static uint8_t valve_command_data_array[2][3] = {{0x53, 0, 0}, {0x53, 1, 0}};
+
   publishDebugMessage("Received " + VALVE_NAMES.at(valve_id) + "/command");
 
   auto &VALVE_PORT_SET = VALVE_PORT_SETS.at(valve_id);
@@ -256,9 +260,10 @@ void TsutenMainboard::valveCommandCallback(const ValveID valve_id,
   valve_controller_port_state |=
       1 << (valve_command.data ? VALVE_PORT_SET.open_port : VALVE_PORT_SET.close_port);
 
-  uint8_t valve_command_data[3] = {0x53, VALVE_PORT_SET.board_number, valve_controller_port_state};
+  auto valve_command_data = valve_command_data_array[VALVE_PORT_SET.board_number];
+  valve_command_data[2] = valve_controller_port_state;
   HAL_UART_Transmit_IT(valve_controller_uart_handler_, valve_command_data,
-                       sizeof(valve_command_data) / sizeof(uint8_t));
+                       sizeof(valve_command_data_array[0]) / sizeof(uint8_t));
 }
 
 void TsutenMainboard::resetOdometryCallback(const tsuten_msgs::ResetOdometryRequest &request,
