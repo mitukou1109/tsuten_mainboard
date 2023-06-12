@@ -1,22 +1,22 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2023 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.h
+ * @brief          : Header for main.c file.
+ *                   This file contains the common defines of the application.
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2023 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under BSD 3-Clause license,
+ * the "License"; You may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at:
+ *                        opensource.org/licenses/BSD-3-Clause
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -60,6 +60,18 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define BNO055_RST_Pin GPIO_PIN_13
 #define BNO055_RST_GPIO_Port GPIOC
+#define BUMPER_L_Pin GPIO_PIN_4
+#define BUMPER_L_GPIO_Port GPIOC
+#define BUMPER_R_Pin GPIO_PIN_5
+#define BUMPER_R_GPIO_Port GPIOC
+#define TAPE_LED_R_Pin GPIO_PIN_0
+#define TAPE_LED_R_GPIO_Port GPIOB
+#define TAPE_LED_G_Pin GPIO_PIN_1
+#define TAPE_LED_G_GPIO_Port GPIOB
+#define TAPE_LED_B_Pin GPIO_PIN_2
+#define TAPE_LED_B_GPIO_Port GPIOB
+#define ONBOARD_LED_Pin GPIO_PIN_14
+#define ONBOARD_LED_GPIO_Port GPIOB
 #define USART3_EN_Pin GPIO_PIN_10
 #define USART3_EN_GPIO_Port GPIOA
 #define UART5_EN_Pin GPIO_PIN_11
