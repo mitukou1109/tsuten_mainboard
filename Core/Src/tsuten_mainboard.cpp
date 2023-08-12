@@ -39,8 +39,6 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
       debug_message_pub_("debug_message", &debug_message_),
       cmd_vel_sub_("cmd_vel", &TsutenMainboard::cmdVelCallback, this),
       tape_led_command_sub_("tape_led_command", &TsutenMainboard::tapeLEDCommandCallback, this),
-      reset_odometry_service_server_("reset_odometry",
-                                     &TsutenMainboard::resetOdometryCallback, this),
       motor_driver_uart_handler_(motor_driver_uart_handler),
       valve_controller_uart_handler_(valve_controller_uart_handler),
       gyro_i2c_handler_(gyro_i2c_handler),
@@ -53,9 +51,6 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
   {
     auto &valve_id = valve_name_pair.first;
     auto &valve_name = valve_name_pair.second;
-
-    static std::unordered_map<ValveID, std::string> valve_command_topic_names;
-    valve_command_topic_names.emplace(valve_id, valve_name + "/command");
 
     valve_command_subs_.emplace(
         std::piecewise_construct,
@@ -79,8 +74,6 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
   {
     nh_.subscribe(valve_command_sub_pair.second);
   }
-
-  nh_.advertiseService(reset_odometry_service_server_);
 
   __HAL_UART_DISABLE_IT(&huart2, UART_IT_PE);
   __HAL_UART_DISABLE_IT(&huart2, UART_IT_ERR);
@@ -264,11 +257,4 @@ void TsutenMainboard::valveCommandCallback(const ValveID valve_id,
   valve_command_data[2] = valve_controller_port_state;
   HAL_UART_Transmit_IT(valve_controller_uart_handler_, valve_command_data,
                        sizeof(valve_command_data_array[0]) / sizeof(uint8_t));
-}
-
-void TsutenMainboard::resetOdometryCallback(const tsuten_msgs::ResetOdometryRequest &request,
-                                            tsuten_msgs::ResetOdometryResponse &response)
-{
-  odom_.x = 0.;
-  odom_.y = 0.;
 }

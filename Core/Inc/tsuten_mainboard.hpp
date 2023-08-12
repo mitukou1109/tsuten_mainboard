@@ -11,7 +11,6 @@
 #include <std_msgs/String.h>
 
 #include <tsuten_msgs/Odometry.h>
-#include <tsuten_msgs/ResetOdometry.h>
 #include <tsuten_msgs/SensorStates.h>
 #include <tsuten_msgs/TapeLEDCommand.h>
 
@@ -83,9 +82,6 @@ private:
 
   void valveCommandCallback(const ValveID valve_id, const std_msgs::Bool &valve_command);
 
-  void resetOdometryCallback(const tsuten_msgs::ResetOdometryRequest &request,
-                             tsuten_msgs::ResetOdometryResponse &response);
-
   ros::NodeHandle nh_;
 
   tsuten_msgs::Odometry odom_;
@@ -102,10 +98,6 @@ private:
   ros::Subscriber<tsuten_msgs::TapeLEDCommand, TsutenMainboard> tape_led_command_sub_;
 
   std::unordered_map<ValveID, ros::Subscriber<std_msgs::Bool>> valve_command_subs_;
-
-  ros::ServiceServer<tsuten_msgs::ResetOdometryRequest, tsuten_msgs::ResetOdometryResponse,
-                     TsutenMainboard>
-      reset_odometry_service_server_;
 
   std_msgs::ColorRGBA tape_led_color_;
 
