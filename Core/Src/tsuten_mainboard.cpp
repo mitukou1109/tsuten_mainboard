@@ -55,7 +55,7 @@ TsutenMainboard::TsutenMainboard(UART_HandleTypeDef *motor_driver_uart_handler,
     valve_command_subs_.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(valve_id),
-        std::forward_as_tuple(valve_command_topic_names.at(valve_id).c_str(),
+        std::forward_as_tuple(valve_name + "/command",
                               std::function<void(const std_msgs::Bool &)>(
                                   std::bind(&TsutenMainboard::valveCommandCallback,
                                             this, valve_id, std::placeholders::_1))));
